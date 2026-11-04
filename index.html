@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dev Learning Hub</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--card:#f4f5f7;--accent:#2563eb;--code:#0b1020;--codefg:#d6e2ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6edf3;--card:#161b22;--accent:#58a6ff}}
+body{margin:0;padding:16px;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;max-width:640px;margin-inline:auto}
+h1{font-size:1.4rem}
+.card{background:var(--card);border-radius:12px;padding:14px;margin:12px 0}
+.card h2{font-size:1rem;margin:0 0 4px}
+.card p{margin:0 0 10px;font-size:.85rem;opacity:.8}
+button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:.95rem}
+pre{background:var(--code);color:var(--codefg);border-radius:8px;padding:10px;margin:10px 0 0;white-space:pre-wrap;font-size:.8rem;min-height:1em}
+</style>
+</head>
+<body>
+<h1>📚 Dev Learning Hub</h1>
+<p>Run dabao aur result dekho. Sab kuch browser mein chalta hai.</p>
+<div id="app"></div>
+<script>
+const binarySearch=(a,t)=>{let lo=0,hi=a.length-1;while(lo<=hi){const m=(lo+hi)>>1;if(a[m]===t)return m;a[m]<t?lo=m+1:hi=m-1}return -1};
+const mergeSort=a=>{if(a.length<2)return a;const m=a.length>>1,l=mergeSort(a.slice(0,m)),r=mergeSort(a.slice(m)),o=[];let i=0,j=0;while(i<l.length&&j<r.length)o.push(l[i]<=r[j]?l[i++]:r[j++]);return o.concat(l.slice(i),r.slice(j))};
+const quickSort=a=>{if(a.length<2)return a;const p=a[a.length>>1];return[...quickSort(a.filter(x=>x<p)),...a.filter(x=>x===p),...quickSort(a.filter(x=>x>p))]};
+const bfs=(g,s)=>{const seen=new Set([s]),q=[s],o=[];while(q.length){const n=q.shift();o.push(n);for(const x of g[n]||[])if(!seen.has(x)){seen.add(x);q.push(x)}}return o};
+const dfs=(g,s,seen=new Set())=>{seen.add(s);let o=[s];for(const x of g[s]||[])if(!seen.has(x))o=o.concat(dfs(g,x,seen));return o};
+const dijkstra=(g,s)=>{const d={[s]:0},todo=new Set([s]);while(todo.size){let n=[...todo].reduce((a,b)=>d[a]<d[b]?a:b);todo.delete(n);for(const[x,w]of g[n]||[])if(d[x]===undefined||d[n]+w<d[x]){d[x]=d[n]+w;todo.add(x)}}return d};
+const fib=(n,m={})=>n<2?n:m[n]??(m[n]=fib(n-1,m)+fib(n-2,m));
+const knapsack=(w,v,c)=>{const dp=Array(c+1).fill(0);w.forEach((wt,i)=>{for(let x=c;x>=wt;x--)dp[x]=Math.max(dp[x],dp[x-wt]+v[i])});return dp[c]};
+const lcs=(a,b)=>{const dp=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);return dp[a.length][b.length]};
+class LRU{constructor(c){this.c=c;this.m=new Map()}get(k){if(!this.m.has(k))return -1;const v=this.m.get(k);this.m.delete(k);this.m.set(k,v);return v}put(k,v){this.m.delete(k);this.m.set(k,v);if(this.m.size>this.c)this.m.delete(this.m.keys().next().value)}}
+class TokenBucket{constructor(cap,rate){this.cap=cap;this.rate=rate;this.t=cap;this.last=0}allow(now){this.t=Math.min(this.cap,this.t+(now-this.last)*this.rate);this.last=now;if(this.t>=1){this.t--;return true}return false}}
+const A="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const encode=n=>{let s="";do{s=A[n%62]+s;n=Math.floor(n/62)}while(n);return s};
+
+const demos=[
+["Binary Search","Sorted array mein O(log n) search",()=>{const d=[1,3,5,7,9,11,13];return `Array: ${d}\nSearch 7 -> ${binarySearch(d,7)}\nSearch 4 -> ${binarySearch(d,4)}`}],
+["Sorting","Merge sort aur Quick sort",()=>{const d=Array.from({length:10},()=>1+Math.floor(Math.random()*49));return `Input: ${d}\nMerge: ${mergeSort(d)}\nQuick: ${quickSort(d)}`}],
+["Graphs","BFS, DFS, Dijkstra",()=>{const g={A:["B","C"],B:["D"],C:["D","E"],D:["F"],E:["F"],F:[]};const w={A:[["B",4],["C",1]],C:[["B",2],["D",7]],B:[["D",1]],D:[]};return `BFS: ${bfs(g,"A")}\nDFS: ${dfs(g,"A")}\nDijkstra: ${JSON.stringify(dijkstra(w,"A"))}`}],
+["Dynamic Programming","Fibonacci, Knapsack, LCS",()=>`fib(40) = ${fib(40)}\nknapsack = ${knapsack([1,3,4,5],[1,4,5,7],7)}\nLCS = ${lcs("ABCBDAB","BDCABA")}`],
+["LRU Cache","Sabse purana item evict hota hai",()=>{const c=new LRU(2);c.put("a",1);c.put("b",2);const r1=c.get("a");c.put("c",3);return `get a -> ${r1}\nget b -> ${c.get("b")} (evicted)\nkeys -> ${[...c.m.keys()]}`}],
+["Rate Limiter","Token bucket: 3 tokens, 1/sec refill",()=>{const t=new TokenBucket(3,1);const burst=[0,0,0,0,0].map(()=>t.allow(0));return `Burst of 5: ${burst}\nAfter 1.1s: ${t.allow(1.1)}`}],
+["URL Shortener","Base62 encoding",()=>`https://sho.rt/${encode(100001)}\nhttps://sho.rt/${encode(123456789)}`]
+];
+const app=document.getElementById("app");
+demos.forEach(([title,desc,fn])=>{
+  const c=document.createElement("div");c.className="card";
+  c.innerHTML=`<h2>${title}</h2><p>${desc}</p>`;
+  const b=document.createElement("button");b.textContent="▶ Run";
+  const o=document.createElement("pre");
+  b.onclick=()=>{try{o.textContent=fn()}catch(e){o.textContent="Error: "+e.message}};
+  c.append(b,o);app.append(c);
+});
+</script>
+</body>
+</html>
